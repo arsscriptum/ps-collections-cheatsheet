@@ -25,7 +25,10 @@
  - [System.Collections.Generic.Stack[string]](#refStack)
  - [System.Collections.Generic.SynchronizedCollection[string]](#refSynchronizedCollection)
  - [System.Collections.Generic.KeyValuePair[int,string]](#refKeyValuePair)
-
+ - [Containers: Tuple, KeyValuePair or Dictionary](#refTupleKeyValuePairDict) 
+ - [Tuple Real Examples](#refTupleRealExamples) 
+ - [TupleComparisonTable](#refTupleComparisonTable) 
+ - [Tuple Named Access](#refTupleNamedAccess) 
 
 ---
 
@@ -34,14 +37,14 @@
 <a id="refSummaryTable"></a>
 | Collection Type                       | Ordering        | Uniqueness | Thread-safe | Indexed | Use Case                        |
 |--------------------------------------|-----------------|------------|-------------|---------|---------------------------------|
-| `Queue<T>`                           | FIFO            | ❌         | ❌          | ❌      | Tasks, print queue              |
-| `PriorityQueue<TElement, TPriority>` | By priority     | ❌         | ❌          | ❌      | Scheduling by priority          |
-| `HashSet<T>`                         | Unordered       | ✅         | ❌          | ❌      | Unique values, fast lookup      |
-| `SortedDictionary<TKey,TValue>`      | Sorted by key   | ✅ (keys)  | ❌          | ❌      | Map with sorted keys            |
-| `SortedList<TKey,TValue>`            | Sorted by key   | ✅ (keys)  | ❌          | ✅      | Sorted, indexable dictionary    |
-| `SortedSet<T>`                       | Sorted          | ✅         | ❌          | ❌      | Sorted unique values            |
-| `Stack<T>`                           | LIFO            | ❌         | ❌          | ❌      | Undo, reverse-order processing  |
-| `SynchronizedCollection<T>`          | As inserted     | ❌         | ✅          | ✅      | Multi-threaded environments     |
+| `Queue<T>`<sup>[1](#refQueue)</sup>  | FIFO            | ❌         | ❌          | ❌      | Tasks, print queue              |
+| `PriorityQueue<TElement, TPriority>`<sup>[2](#refPriorityQueue)</sup> | By priority     | ❌         | ❌          | ❌      | Scheduling by priority          |
+| `HashSet<T>`<sup>[3](#refHashSet)</sup>                         | Unordered       | ✅         | ❌          | ❌      | Unique values, fast lookup      |
+| `SortedDictionary<TKey,TValue>`<sup>[4](#refSortedDictionary)</sup>      | Sorted by key   | ✅ (keys)  | ❌          | ❌      | Map with sorted keys            |
+| `SortedList<TKey,TValue>`<sup>[5](#refSortedList)</sup>            | Sorted by key   | ✅ (keys)  | ❌          | ✅      | Sorted, indexable dictionary    |
+| `SortedSet<T>`<sup>[6](#refSortedSet)</sup>                       | Sorted          | ✅         | ❌          | ❌      | Sorted unique values            |
+| `Stack<T>`<sup>[7](#refStack)</sup>                           | LIFO            | ❌         | ❌          | ❌      | Undo, reverse-order processing  |
+| `SynchronizedCollection<T>`<sup>[8](#refSynchronizedCollection)</sup>          | As inserted     | ❌         | ✅          | ✅      | Multi-threaded environments     |
 
 
 ---
@@ -124,17 +127,16 @@
 <a id="refQuickGuide"></a>
 | Situation | Recommended Collection |
 |-----------|------------------------|
-| Task queue, producer-consumer | `Queue<T>` |
-| Undo/redo, backtracking | `Stack<T>` |
-| Priority-based jobs | `PriorityQueue<TElement, TPriority>` |
-| Unique items, fast lookup | `HashSet<T>` |
-| Unique sorted items | `SortedSet<T>` |
-| Mapping keys to values | `SortedDictionary<K,V>` or `SortedList<K,V>` |
-| Thread-safe collection of items | `SynchronizedCollection<T>` |
-| Returning 2 related values | `KeyValuePair<K,V>` |
+| Task queue, producer-consumer | `Queue<T>`<sup>[1](#refQueue)</sup> |
+| Undo/redo, backtracking | `Stack<T>`<sup>[2](#refStack)</sup> |
+| Priority-based jobs | `PriorityQueue<TElement, TPriority>`<sup>[3](#refPriorityQueue)</sup> |
+| Unique items, fast lookup | `HashSet<T>`<sup>[3](#refHashSet)</sup> |
+| Unique sorted items | `SortedSet<T>`<sup>[4](#refSortedSet)</sup> |
+| Mapping keys to values | `SortedDictionary<K,V>`<sup>[5](#refSortedDictionary)</sup> or `SortedList<K,V>`<sup>[6](#refSortedList)</sup> |
+| Thread-safe collection of items | `SynchronizedCollection<T>`<sup>[7](#refSynchronizedCollection)</sup> |
+| Returning 2 related values | `KeyValuePair<K,V>`<sup>[8](#refKeyValuePair)</sup> |
 
 ---
-
 
 <a id="refQueue"></a>
 ### 🔹 `[System.Collections.Generic.Queue[string]]`  
@@ -271,6 +273,66 @@ $sync[0]  # Output: log1
 ---
 
 
+### 🔹 `[System.Collections.Generic.KeyValuePair[int, string]]`
+<a id="refKeyValuePair"></a>
+
+`[System.Collections.Generic.KeyValuePair[int, string]]` (or more generally, `KeyValuePair<TKey, TValue>`) is used when you want to **store a pair of related values together** — a **key** and a **value** — in a lightweight structure.
+
+When you enumerate a dictionary (`[Dictionary[int, string]]`), each item is returned as a `KeyValuePair<TKey, TValue>` so you **don’t usually create `KeyValuePair` manually**, but you deal with them when enumerating dictionaries.
+
+
+```powershell
+$dict = [System.Collections.Generic.Dictionary[int, string]]::new()
+$dict.Add(1, "One")
+$dict.Add(2, "Two")
+
+foreach ($pair in $dict) {
+    "$($pair.Key) => $($pair.Value)"
+}
+```
+
+Sometimes you want a method to return two related values, and `KeyValuePair<TKey, TValue>` is a lightweight and clear way to do that:
+
+```powershell
+function Get-IdAndName {
+    return [System.Collections.Generic.KeyValuePair[int, string]]::new(42, "Guillaume")
+}
+
+$result = Get-IdAndName
+"ID: $($result.Key), Name: $($result.Value)"
+```
+
+If you need a **list of key/value pairs**, but don’t need fast lookup or don’t want to use a dictionary:
+
+
+```powershell
+$pairs = [System.Collections.Generic.List[System.Collections.Generic.KeyValuePair[int,string]]]::new()
+$pairs.Add([System.Collections.Generic.KeyValuePair[int,string]]::new(1, "apple"))
+$pairs.Add([System.Collections.Generic.KeyValuePair[int,string]]::new(2, "banana"))
+
+foreach ($pair in $pairs) {
+    "$($pair.Key): $($pair.Value)"
+}
+```
+
+
+When *Not* to Use It: 
+
+- If you're just pairing two values without a "key → value" relationship, a `[Tuple[int, string]]` might be more semantically correct.
+- If you need fast key-based lookup, use `[Dictionary[int, string]]` directly instead of a list of pairs.
+
+Summary:
+
+| Use Case                        | Recommended |
+|--------------------------------|-------------|
+| Iterating over a dictionary    | ✅ Yes      |
+| Storing a simple (key, value) pair | ✅ Yes  |
+| Returning two related values from a function | ✅ Yes |
+| Fast key lookup                | ❌ No — use Dictionary instead |
+| Pairing values with no clear "key" | ❓ Maybe Tuple instead |
+
+
+
 <a id="refFlowChart"></a>
 
 ### 🔹 Flowchart diagram image showing the relationship and usage of generic collections
@@ -288,6 +350,109 @@ $sync[0]  # Output: log1
 
 ![cheatsheet](cheatsheet.png)
 
+---
 
 
+<a id="refTupleKeyValuePairDict"></a>
 
+
+# Choosing between `Tuple`, `KeyValuePair`, and `Dictionary` 
+
+This depends on **what you're modeling**, **how you want to access it**, and **what guarantees (like uniqueness) you need**.
+
+Below is a step-by-step guide with with real-world-style **decision criteria**, **comparison table**, and **PowerShell examples**.
+
+---
+
+## 🧠 Decision Criteria
+
+| Question | Go with |
+|---------|---------|
+| Do you need to store a **key-value pair** with uniqueness on keys and fast lookup? | `Dictionary<TKey, TValue>` |
+| Do you want to **return two values** from a method/function? | `Tuple<T1, T2>` |
+| Are you **iterating through** a dictionary or representing a lightweight relationship? | `KeyValuePair<TKey, TValue>` |
+| Do you want **named access** to the values? | Use **Tuple (named)** or create a custom object |
+| Do you want to **store multiple pairs** in a collection? | `List<KeyValuePair<TKey, TValue>>` or `Dictionary` |
+| Is key order important? | Use `SortedDictionary<TKey, TValue>` |
+
+---
+
+## 🆚 Comparison Table
+<a id="refTupleComparisonTable"></a>
+| Feature                 | `Tuple<T1, T2>`                  | `KeyValuePair<TKey, TValue>`         | `Dictionary<TKey, TValue>`        |
+|------------------------|----------------------------------|--------------------------------------|----------------------------------|
+| Key-based lookup       | ❌                                | ❌                                    | ✅                              |
+| Unique keys enforced   | ❌                                | ❌                                    | ✅                              |
+| Access by name         | ⚠️ (`Item1`, `Item2`)             | ✅ (`.Key`, `.Value`)                | ✅ (`$dict[$key]`)              |
+| Modifiable             | ⚠️ Immutable                     | ✅ (mutable fields)                   | ✅                              |
+| Stores many pairs      | ⚠️ Needs list/array               | ✅ Often used in lists                | ✅ Built-in                     |
+| Indexed access         | ✅ (via array)                    | ⚠️ (via list)                         | ❌ (keys are hashed)            |
+| Ordering guaranteed?   | ❌                                | ⚠️ (depends on container)             | ❌ (unless `SortedDictionary`)  |
+
+---
+
+## 🔁 Real Examples
+<a id="refTupleRealExamples"></a>
+### ✅ **Tuple**: Return two values
+```powershell
+function Get-NameAndAge {
+    return [Tuple[string, int]]::new("Alice", 30)
+}
+
+$t = Get-NameAndAge
+"Name: $($t.Item1), Age: $($t.Item2)"
+```
+📌 Use for small, temporary structures. Not ideal for readability if `Item1`, `Item2`, etc. get confusing.
+
+---
+
+### ✅ **KeyValuePair**: Represent a pair in a list
+```powershell
+$pairs = [System.Collections.Generic.List[System.Collections.Generic.KeyValuePair[string,int]]]::new()
+$pairs.Add([System.Collections.Generic.KeyValuePair[string,int]]::new("Banana", 2))
+$pairs.Add([System.Collections.Generic.KeyValuePair[string,int]]::new("Apple", 5))
+
+foreach ($pair in $pairs) {
+    "$($pair.Key): $($pair.Value)"
+}
+```
+📌 Ideal for **enumerating** or **building** key-value-like structures without enforcing uniqueness.
+
+---
+
+### ✅ **Dictionary**: Enforce unique keys with fast lookup
+```powershell
+$dict = [System.Collections.Generic.Dictionary[string, int]]::new()
+$dict.Add("Banana", 2)
+$dict.Add("Apple", 5)
+
+$dict["Apple"]  # Returns 5
+```
+📌 Best for **mapping** scenarios, like settings, config, indexed data. Fast and powerful.
+
+---
+
+## 🎯 Summary Cheat Sheet
+
+| Use Case                          | Best Choice             |
+|----------------------------------|-------------------------|
+| Return 2+ values from function   | `Tuple<T1, T2>`         |
+| Store pair in a list             | `KeyValuePair<K, V>`    |
+| One-time mapping with lookup     | `Dictionary<K, V>`      |
+| Unique key-value set             | `Dictionary<K, V>`      |
+| Represent small record           | `Tuple<T1, T2>` or custom class |
+
+---
+
+## Tuple Named Access
+<a id="refTupleNamedAccess"></a>
+Want named access on a tuple?
+
+```powershell
+# With ValueTuple and named elements (PowerShell 7+)
+$t = [ValueTuple[string, int]]::new("Bob", 25)
+$name = $t.Item1
+$age = $t.Item2
+```
+
+---
